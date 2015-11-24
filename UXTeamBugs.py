@@ -2,7 +2,6 @@
 
 # System dependencies
 import argparse
-import sys
 from datetime import datetime, timedelta, tzinfo
 
 # Modules
@@ -28,28 +27,34 @@ class _UTC(tzinfo):
 
 UTC = _UTC()
 
-parser = argparse.ArgumentParser(
-    'Generate a report of bugs closed in a date range'
-)
-parser.add_argument('start', metavar='START', type=str,
-                    help='Start date of the form YYYY-MM-DD')
-parser.add_argument('end', metavar='END', type=str,
-                    help='End date off the form YYYY-MM-DD')
-args = parser.parse_args()
-try:
-    start = datetime.strptime(args.start, '%Y-%m-%d')
-except ValueError:
-    parser.print_help()
-    sys.exit(1)
-start = start.replace(tzinfo=UTC)
-try:
-    end = datetime.strptime(args.end, '%Y-%m-%d')
-except ValueError:
-    parser.print_help()
-    sys.exit(1)
-end += timedelta(hours=23, minutes=59, seconds=59)
-end = end.replace(tzinfo=UTC)
 
+# Collect arguments
+def valid_date(date_string):
+    """
+    A test for valid date types, for argparse
+    """
+
+    try:
+        return datetime.strptime(date_string, "%Y-%m-%d")
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            "Not a valid date: '{0}'.".format(date_string)
+        )
+
+parser = argparse.ArgumentParser(
+    description="Generate a report of bugs closed in a date range",
+    usage="python UXTeamBugs.py {YYYY-MM-DD} {YYYY-MM-DD}"
+)
+parser.add_argument('start', help='Start date (YYYY-MM-DD)', type=valid_date)
+parser.add_argument('end', help='End date (YYYY-MM-DD)', type=valid_date)
+args = parser.parse_args()
+
+# Format dates
+start = datetime.strptime(args.start, '%Y-%m-%d')
+end = datetime.strptime(args.end, '%Y-%m-%d')
+start = start.replace(tzinfo=UTC)
+end = args.endtimedelta(hours=23, minutes=59, seconds=59)
+end = args.end.replace(tzinfo=UTC)
 
 # Collect statuses into categories
 fixed = ['Fix Released', 'Fix Committed']
