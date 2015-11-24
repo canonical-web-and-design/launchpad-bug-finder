@@ -12,30 +12,38 @@ from launchpadlib.launchpad import Launchpad
 # Collect arguments
 def valid_date(date_string):
     """
-    A test for valid date types, for argparse
+    An argparse type for a date object
     """
 
     try:
-        return datetime.strptime(date_string, "%Y-%m-%d")
+        timezone = get_localzone()
+        return timezone.localize(datetime.strptime(date_string, "%Y-%m-%d"))
     except ValueError:
         raise argparse.ArgumentTypeError(
             "Not a valid date: '{0}'.".format(date_string)
         )
+
+
+def end_date(date_string):
+    """
+    An argparse type for a date object,
+    but with a timestamp for the end of the date
+    """
+
+    date = valid_date(date_string)
+    return date.replace(hour=23, minute=59, second=59)
+
 
 parser = argparse.ArgumentParser(
     description="Generate a report of bugs closed in a date range",
     usage="python UXTeamBugs.py {YYYY-MM-DD} {YYYY-MM-DD}"
 )
 parser.add_argument('start', help='Start date (YYYY-MM-DD)', type=valid_date)
-parser.add_argument('end', help='End date (YYYY-MM-DD)', type=valid_date)
+parser.add_argument('end', help='End date (YYYY-MM-DD)', type=end_date)
 args = parser.parse_args()
 
-# Format dates
-timezone = get_localzone()
-start = timezone.localize(datetime.strptime(args.start, '%Y-%m-%d'))
-end = timezone.localize(
-    datetime.strptime(args.end + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
-)
+start = args.start
+end = args.end
 
 # Collect statuses into categories
 fixed = ['Fix Released', 'Fix Committed']
