@@ -2,30 +2,11 @@
 
 # System dependencies
 import argparse
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime
 
 # Modules
+from tzlocal import get_localzone
 from launchpadlib.launchpad import Launchpad
-
-
-# Parse arguments passed to this script
-class _UTC(tzinfo):
-    """
-    A tzinfo class for adding the UTC timezone to datetime objects
-    E.g.:
-        datetime_object.replace(tzinfo=_UTC())
-    """
-
-    def utcoffset(self, dt):
-        return timedelta(0)
-
-    def tzname(self, dt):
-        return 'UTC'
-
-    def dst(self, dt):
-        return timedelta(0)
-
-UTC = _UTC()
 
 
 # Collect arguments
@@ -50,11 +31,11 @@ parser.add_argument('end', help='End date (YYYY-MM-DD)', type=valid_date)
 args = parser.parse_args()
 
 # Format dates
-start = datetime.strptime(args.start, '%Y-%m-%d')
-end = datetime.strptime(args.end, '%Y-%m-%d')
-start = start.replace(tzinfo=UTC)
-end = args.endtimedelta(hours=23, minutes=59, seconds=59)
-end = args.end.replace(tzinfo=UTC)
+timezone = get_localzone()
+start = timezone.localize(datetime.strptime(args.start, '%Y-%m-%d'))
+end = timezone.localize(
+    datetime.strptime(args.end + ' 23:59:59', '%Y-%m-%d %H:%M:%S')
+)
 
 # Collect statuses into categories
 fixed = ['Fix Released', 'Fix Committed']
