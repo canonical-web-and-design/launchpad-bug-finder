@@ -1,0 +1,2 @@
+launchpadlib==1.10.3
+tzlocal==1.2
